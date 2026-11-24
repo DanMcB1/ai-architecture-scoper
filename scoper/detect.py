@@ -79,7 +79,7 @@ INDUSTRY_RULES: list[dict[str, Any]] = [
         "id": "healthcare",
         "label": "Healthcare / hospital",
         "patterns": [
-            r"\bhospital(?:s| system)?\b",
+            r"\bhospital(?:s| system)?\b(?!\s+cafeterias?\b)",
             r"\bhealth system\b",
             r"\bclinic(?:s|al)?\b",
             r"\bpatient(?:s)?\b",

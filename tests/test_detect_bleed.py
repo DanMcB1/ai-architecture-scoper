@@ -126,6 +126,12 @@ class EdgeAskTests(unittest.TestCase):
         self.assertTrue(any("Compliance" in d for d in departments(profile)))
         self.assertTrue(any("PHI" in t for t in data_types(profile)))
 
+    def test_hospital_cafeteria_is_not_clinical_phi(self):
+        profile = build_profile("We want AI in a hospital cafeteria business.")
+        self.assertNotEqual(profile.industry_id, "healthcare")
+        self.assertFalse(any("PHI" in t for t in data_types(profile)))
+        self.assertFalse(any("Clinical" in d for d in departments(profile)))
+
 
 if __name__ == "__main__":
     unittest.main()
