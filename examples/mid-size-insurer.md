@@ -11,7 +11,7 @@
 
 ## 1. Problem summary
 
-Northbridge P&C (sample) is a mid-size insurance organization (mid-size organization) asking for AI help with Patient intake acceleration, FNOL / claims intake, and Fraud triage for SIU in Patient intake / front desk, Claims operations, and Special Investigations (SIU). Those workflows run on CRM, Claims system, and Policy admin and involve Financial / claims amounts and PII (personally identifiable information). That is a Regulated engagement: policyholder PII, financials, and any fraud-scoring output have to be explainable and carefully controlled.
+Northbridge P&C (sample) is a mid-size insurance organization (mid-size organization) asking for AI help with FNOL / claims intake and Fraud triage for SIU in Claims operations and Special Investigations (SIU). Those workflows run on CRM, Claims system, and Policy admin and involve Financial / claims amounts and PII (personally identifiable information). That is a Regulated engagement: policyholder PII, financials, and any fraud-scoring output have to be explainable and carefully controlled.
 
 The business problem underneath the ask is cycle time and manual review. FNOL intake is repetitive, and SIU triage is slow because analysts hunt for signals by hand. A four-week scoping engagement will map the intake and referral path, design a thin slice that assists — not auto-decides — claims and SIU staff, and leave the carrier with a pilot plan, KPIs, and a clear stance on model-risk and fairness questions. This is not a book of business go-live, and it is not an automated decline engine.
 
@@ -34,8 +34,8 @@ The business problem underneath the ask is cycle time and manual review. FNOL in
 
 ### In scope
 
-- Discovery with Patient intake / front desk, Claims operations, and Special Investigations (SIU) and a current-state map of FNOL / claims intake and, if in scope, SIU referral through CRM, Claims system, and Policy admin.
-- A target architecture for Patient intake acceleration, FNOL / claims intake, and Fraud triage for SIU with read-only integration, access control, and an audit trail of recommendations.
+- Discovery with Claims operations and Special Investigations (SIU) and a current-state map of FNOL / claims intake and, if in scope, SIU referral through CRM, Claims system, and Policy admin.
+- A target architecture for FNOL / claims intake and Fraud triage for SIU with read-only integration, access control, and an audit trail of recommendations.
 - A STRIDE-style threat model covering PII, financial data, prompt injection against claims data, and misuse of fraud flags.
 - A thin-slice prototype on historical or synthetic claims that illustrates intake structuring and/or SIU triage support.
 - A pilot recommendation for one claims pod or line of business, with cycle-time and quality KPIs and model-risk notes.
@@ -71,7 +71,7 @@ The business problem underneath the ask is cycle time and manual review. FNOL in
 
 **Deliverables**
 
-- Current-state map of Patient intake acceleration, FNOL / claims intake, and Fraud triage for SIU.
+- Current-state map of FNOL / claims intake and Fraud triage for SIU.
 - System and data inventory, including sensitive financial and PII fields.
 - Confirmed prototype scope and exclusions.
 
@@ -99,7 +99,7 @@ The business problem underneath the ask is cycle time and manual review. FNOL in
 
 **Goals**
 
-- Show one working slice of Patient intake acceleration, FNOL / claims intake, and Fraud triage for SIU that an intake specialist or SIU analyst can react to.
+- Show one working slice of FNOL / claims intake and Fraud triage for SIU that an intake specialist or SIU analyst can react to.
 - Test whether the explanations are actually useful, not just technically present.
 
 **Activities**
@@ -137,14 +137,13 @@ The business problem underneath the ask is cycle time and manual review. FNOL in
 
 ## 5. Proposed architecture
 
-The proposed slice sits beside CRM, Claims system, and Policy admin; it does not replace the claims or policy admin platforms and it does not issue claim decisions. A read-only, minimized extract feeds an assistant used by Patient intake / front desk, Claims operations, and Special Investigations (SIU) for Patient intake acceleration, FNOL / claims intake, and Fraud triage for SIU. Access control and an audit log record what was suggested and why, which matters for both quality review and any later regulatory question. Data class is Regulated; relevant controls include Internal access control, Audit logging, GLBA, Model risk / explainability documentation for fraud flags, State insurance regulatory expectations, and State privacy laws (e.g. applicable US state privacy acts). Fraud-related output, if present, is a 'review suggested' aid with reasons, never an automatic adverse action. No write-back in weeks 1–3.
+The proposed slice sits beside CRM, Claims system, and Policy admin; it does not replace the claims or policy admin platforms and it does not issue claim decisions. A read-only, minimized extract feeds an assistant used by Claims operations and Special Investigations (SIU) for FNOL / claims intake and Fraud triage for SIU. Access control and an audit log record what was suggested and why, which matters for both quality review and any later regulatory question. Data class is Regulated; relevant controls include Internal access control, Audit logging, GLBA, Model risk / explainability documentation for fraud flags, State insurance regulatory expectations, and State privacy laws (e.g. applicable US state privacy acts). Fraud-related output, if present, is a 'review suggested' aid with reasons, never an automatic adverse action. No write-back in weeks 1–3.
 
 The diagram below is a Mermaid flowchart. GitHub, many Markdown previewers, and this app will render it. If your viewer does not, the text is still readable as a source list of systems and flows.
 
 ```mermaid
 flowchart TB
   subgraph Users["Users"]
-    UPatientIntakeFrontDesk["Patient intake / front desk"]
     UClaimsOperations["Claims operations"]
     USpecialInvestigationsSi["Special Investigations (SIU)"]
   end
@@ -156,13 +155,12 @@ flowchart TB
   subgraph Slice["Proposed 4-week thin slice"]
     CONN["Read-only data connector"]
     GOV["Access control and audit log"]
-    APP["Patient intake acceleration"]
+    APP["FNOL / claims intake"]
   end
   SCrm --> CONN
   SClaimsSystem --> CONN
   SPolicyAdmin --> CONN
   CONN --> GOV --> APP
-  UPatientIntakeFrontDesk --> APP
   UClaimsOperations --> APP
   USpecialInvestigationsSi --> APP
 ```
@@ -229,18 +227,15 @@ This SOW was produced by a deterministic rules engine. The table below shows the
 
 | Category | Label | Evidence | Weight |
 | --- | --- | --- | --- |
-| industry | Healthcare / hospital | "intake" | 1 |
 | industry | Insurance (P&C) | "insurer", "Insurance", "claims", "FNOL", "first notice of loss", "policy" | 12 |
 | data | Financial / claims amounts | "claims", "fraud", "loss", "financial data", "policy admin" | 5 |
 | data | PII (personally identifiable information) | "PII", "policyholder" | 2 |
 | system | CRM | "CRM" | 1 |
 | system | Claims system | "claims system" | 1 |
 | system | Policy admin | "policy admin" | 1 |
-| department | Patient intake / front desk | "intake" | 1 |
 | department | Claims operations | "claims", "adjusters", "FNOL" | 3 |
 | department | Special Investigations (SIU) | "SIU", "fraud" | 2 |
-| use_case | Patient intake acceleration | "intake" | 1 |
-| use_case | FNOL / claims intake | "FNOL", "first notice of loss", "claims intake" | 3 |
+| use_case | FNOL / claims intake | "FNOL", "first notice of loss", "claims intake", "intake" | 4 |
 | use_case | Fraud triage for SIU | "fraud", "SIU" | 2 |
 | size | mid-size organization | "mid-size" | 1 |
 

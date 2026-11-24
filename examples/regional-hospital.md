@@ -235,9 +235,9 @@ This SOW was produced by a deterministic rules engine. The table below shows the
 | system | Identity / SSO | "SSO", "identity" | 2 |
 | department | Clinical / physicians | "clinician", "physician" | 2 |
 | department | Nursing | "Nurses" | 1 |
-| department | Patient intake / front desk | "intake", "front-desk" | 2 |
+| department | Patient intake / front desk | "patient intake", "front-desk" | 2 |
 | department | Compliance / privacy | "compliance", "HIPAA" | 2 |
-| use_case | Patient intake acceleration | "intake" | 1 |
+| use_case | Patient intake acceleration | "patient intake", "front-desk intake" | 2 |
 | use_case | Clinical documentation assistance | "documentation", "charting", "after hours" | 3 |
 | size | 3 campuses | "three campuses" | 1 |
 | size | regional footprint | "regional" | 1 |

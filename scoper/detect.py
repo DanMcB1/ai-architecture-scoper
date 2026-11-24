@@ -97,7 +97,7 @@ INDUSTRY_RULES: list[dict[str, Any]] = [
             r"\bnurs(?:e|es|ing)\b",
             r"\bcharting\b",
             r"\bclinical documentation\b",
-            r"\bintake\b",
+            r"\bpatient intake\b",
             r"\bcampus(?:es)?\b",
         ],
     },
@@ -172,7 +172,7 @@ DATA_TYPE_RULES: list[tuple[str, list[str]]] = [
         [
             r"\bpii\b",
             r"\bpolicyholder(?:s)?\b",
-            r"\bcustomer(?:s)?\b",
+            r"\bcustomer (?:data|records|information|pii)\b",
             r"\bemployee(?:s)?\b",
             r"\bssn\b",
             r"\bdriver'?s license\b",
@@ -196,29 +196,46 @@ SYSTEM_RULES: list[tuple[str, list[str]]] = [
     ("ERP", [r"\berp\b", r"\bsap\b", r"\bnetsuite\b"]),
 ]
 
-DEPARTMENT_RULES: list[tuple[str, list[str]]] = [
-    ("F&I", [r"\bf&i\b", r"\bfinance and insurance\b"]),
-    ("Service", [r"\bservice (?:department|departments|lane|advisors?|drive)\b", r"\bservice\b"]),
-    ("Sales", [r"\bsales (?:department|desk|team)\b"]),
-    ("Parts", [r"\bparts (?:department|counter)\b"]),
-    ("Clinical / physicians", [r"\bclinician", r"\bphysician", r"\bdoctor", r"\bprovider"]),
-    ("Nursing", [r"\bnurs(?:e|es|ing)\b"]),
-    ("Patient intake / front desk", [r"\bintake\b", r"\bfront-?desk\b", r"\badmissions?\b"]),
-    ("Health information management", [r"\bhim\b", r"\bmedical records\b"]),
-    ("Compliance / privacy", [r"\bcompliance\b", r"\bprivacy (?:team|office|officer|review)\b", r"\bhipaa\b"]),
-    ("Claims operations", [r"\bclaims?\b", r"\badjusters?\b", r"\bfnol\b"]),
-    ("Special Investigations (SIU)", [r"\bsiu\b", r"\bfraud\b"]),
-    ("Underwriting", [r"\bunderwrit"]),
+# Third item is the set of industries the rule may fire in, or None for all.
+DEPARTMENT_RULES: list[tuple[str, list[str], set[str] | None]] = [
+    ("F&I", [r"\bf&i\b", r"\bfinance and insurance\b"], {"automotive"}),
+    (
+        "Service",
+        [r"\bservice (?:department|departments|lane|advisors?|drive)\b"],
+        {"automotive"},
+    ),
+    ("Sales", [r"\bsales (?:department|desk|team)\b"], {"automotive"}),
+    ("Parts", [r"\bparts (?:department|counter)\b"], {"automotive"}),
+    ("Clinical / physicians", [r"\bclinician", r"\bphysician", r"\bdoctor", r"\bprovider"], {"healthcare"}),
+    ("Nursing", [r"\bnurs(?:e|es|ing)\b"], {"healthcare"}),
+    (
+        "Patient intake / front desk",
+        [r"\bpatient intake\b", r"\bfront-?desk\b", r"\badmissions?\b"],
+        {"healthcare"},
+    ),
+    ("Health information management", [r"\bhim\b", r"\bmedical records\b"], {"healthcare"}),
+    (
+        "Compliance / privacy",
+        [r"\bcompliance\b", r"\bprivacy (?:team|office|officer|review)\b", r"\bhipaa\b"],
+        None,
+    ),
+    ("Claims operations", [r"\bclaims?\b", r"\badjusters?\b", r"\bfnol\b"], {"insurance"}),
+    ("Special Investigations (SIU)", [r"\bsiu\b", r"\bfraud\b"], {"insurance"}),
+    ("Underwriting", [r"\bunderwrit"], {"insurance"}),
 ]
 
-USE_CASE_RULES: list[tuple[str, list[str]]] = [
-    ("F&I menu / product presentation", [r"\bmenus?\b", r"\bproduct penetration\b", r"\bf&i\b"]),
-    ("Service write-up quality", [r"\bwrite-?up\b", r"\bservice advisors?\b"]),
-    ("Appointment no-show reduction", [r"\bno-shows?\b"]),
-    ("Patient intake acceleration", [r"\bintake\b"]),
-    ("Clinical documentation assistance", [r"\bdocumentation\b", r"\bcharting\b", r"\bafter hours\b"]),
-    ("FNOL / claims intake", [r"\bfnol\b", r"\bfirst notice of loss\b", r"\bclaims intake\b"]),
-    ("Fraud triage for SIU", [r"\bfraud\b", r"\bsiu\b"]),
+USE_CASE_RULES: list[tuple[str, list[str], set[str] | None]] = [
+    ("F&I menu / product presentation", [r"\bmenus?\b", r"\bproduct penetration\b", r"\bf&i\b"], {"automotive"}),
+    ("Service write-up quality", [r"\bwrite-?up\b", r"\bservice advisors?\b"], {"automotive"}),
+    ("Appointment no-show reduction", [r"\bno-shows?\b"], {"automotive"}),
+    ("Patient intake acceleration", [r"\bpatient intake\b", r"\bfront-?desk intake\b"], {"healthcare"}),
+    ("Clinical documentation assistance", [r"\bdocumentation\b", r"\bcharting\b", r"\bafter hours\b"], {"healthcare"}),
+    (
+        "FNOL / claims intake",
+        [r"\bfnol\b", r"\bfirst notice of loss\b", r"\bclaims intake\b", r"\bintake\b"],
+        {"insurance"},
+    ),
+    ("Fraud triage for SIU", [r"\bfraud\b", r"\bsiu\b"], {"insurance"}),
 ]
 
 SIZE_PATTERNS = [
@@ -306,12 +323,20 @@ def detect_industry(text: str) -> tuple[str, str, list[Signal]]:
 
 def detect_list(
     text: str,
-    rules: list[tuple[str, list[str]]],
+    rules: list[tuple],
     category: str,
+    industry_id: str | None = None,
 ) -> tuple[list[str], list[Signal]]:
+    """Apply label/pattern rules, optionally limited to one industry."""
     labels: list[str] = []
     signals: list[Signal] = []
-    for label, patterns in rules:
+    for rule in rules:
+        if len(rule) == 3:
+            label, patterns, industries = rule
+            if industries is not None and industry_id not in industries:
+                continue
+        else:
+            label, patterns = rule
         hits = _scan(text, patterns)
         if hits:
             labels.append(label)
@@ -495,8 +520,12 @@ def build_profile(
                 already.add(item.lower())
                 system_signals.append(Signal("system", item, "provided in the Existing systems field"))
 
-    departments, dept_signals = detect_list(haystack, DEPARTMENT_RULES, "department")
-    use_cases, use_case_signals = detect_list(haystack, USE_CASE_RULES, "use_case")
+    departments, dept_signals = detect_list(
+        haystack, DEPARTMENT_RULES, "department", industry_id
+    )
+    use_cases, use_case_signals = detect_list(
+        haystack, USE_CASE_RULES, "use_case", industry_id
+    )
     size_hint, site_count, size_signals = detect_size(haystack)
 
     sensitivity, sensitivity_reason, compliance, sens_overrides = infer_sensitivity(
@@ -508,7 +537,7 @@ def build_profile(
     if team_size.strip():
         overrides.append("team size provided by the user")
 
-    name = customer_name.strip() or "Customer engagement"
+    name = customer_name.strip() or "Your organization"
 
     # Industry-specific default systems if none found
     if not systems:

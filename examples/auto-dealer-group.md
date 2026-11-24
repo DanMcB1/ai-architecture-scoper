@@ -227,12 +227,12 @@ This SOW was produced by a deterministic rules engine. The table below shows the
 | --- | --- | --- | --- |
 | industry | Automotive retail / dealer group | "dealer", "dealer group", "rooftop", "Automotive", "auto dealer", "F&I" | 9 |
 | data | Payment / consumer credit data | "F&I", "credit data" | 2 |
-| data | PII (personally identifiable information) | "customer", "privacy", "credit data" | 3 |
+| data | PII (personally identifiable information) | "privacy", "credit data" | 2 |
 | system | DMS | "DMS" | 1 |
 | system | CRM | "CRM" | 1 |
 | system | Service scheduling | "service schedul", "no-shows" | 2 |
 | department | F&I | "F&I" | 1 |
-| department | Service | "service departments", "service" | 2 |
+| department | Service | "service departments" | 1 |
 | use_case | F&I menu / product presentation | "menus", "product penetration", "F&I" | 3 |
 | use_case | Service write-up quality | "write-up", "service advisors" | 2 |
 | use_case | Appointment no-show reduction | "no-shows" | 1 |
