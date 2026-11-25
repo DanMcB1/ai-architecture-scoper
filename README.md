@@ -1,5 +1,7 @@
 # Automated Architecture Scoper
 
+**Portfolio project #11 of 12** from [@suraj_sharma14's FDE project list](https://x.com/suraj_sharma14/status/2125197762752806998).
+
 A small, offline demo that turns a vague customer ask — *“We're a 40-rooftop auto dealer group and want AI for our F&I and service departments”* — into a **4-week Statement of Work**.
 
 This is a **portfolio demo**, not production software. It does not connect to real customer systems, and the document it writes is a starting point for a human to review, not a binding proposal.
